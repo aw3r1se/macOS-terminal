@@ -9,11 +9,16 @@
     ".": "./src/index.js",
     "./style.css": "./src/style.css"
   },
+  "scripts": {
+    "dev": "vite demo",
+    "build:demo": "vite build demo",
+    "preview:demo": "vite preview demo"
+  },
   "files": ["src"],
   "sideEffects": ["*.vue", "*.css"],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aw3r1se/macos-terminal.git"
+    "url": "git+https://github.com/aw3r1se/macOS-terminal.git"
   },
   "dependencies": {
     "@aw3r1se/vue-dragresize": "^1.1.0",
@@ -24,6 +29,12 @@
   },
   "peerDependencies": {
     "vue": "^3.3.0"
+  },
+  "devDependencies": {
+    "@aw3r1se/macos-dock": "^0.1.0",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "vite": "^8.3.5",
+    "vue": "^3.5.44"
   },
   "keywords": [
     "vue",
@@ -39,6 +50,7 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/aw3r1se/macos-terminal/issues"
-  }
+    "url": "https://github.com/aw3r1se/macOS-terminal/issues"
+  },
+  "homepage": "https://aw3r1se.github.io/macOS-terminal/"
 }

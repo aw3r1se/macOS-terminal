@@ -25,12 +25,10 @@ const props = defineProps({
   // Space kept between the window and the viewport edges, px. Inset the
   // window's container by the same amount, so "zoom" fills it exactly.
   margin: { type: Number, default: 10 },
-  // Flash the screen on the bell (Terminal.app's "Flash screen")
-  visualBell: { type: Boolean, default: false },
 })
 
 
-const emit = defineEmits(['close', 'minimize', 'bell'])
+const emit = defineEmits(['close', 'minimize'])
 
 const MARGIN = props.margin
 // Terminal.app entering/leaving full screen: ~0.4s from the window to the screen
@@ -193,8 +191,6 @@ watch(
   { flush: 'sync' },
 )
 
-// The bell is reported, e.g. to bounce a Dock icon while the window is in the background
-watch(session.bellCount, () => emit('bell'))
 
 onMounted(() => {
   document.addEventListener('fullscreenchange', onFullscreenChange)
@@ -278,7 +274,6 @@ defineExpose({ title, session, focus, isFocused, minimizeTo, restoreFrom })
         ref="screen"
         :session="session"
         :focused="isFocused"
-        :visual-bell="visualBell"
         @resize="onGridResize"
       />
     </div>

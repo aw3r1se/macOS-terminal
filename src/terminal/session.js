@@ -96,23 +96,11 @@ export function useTerminal(options = {}) {
 
   const push = (line) => lines.value.push({ id: nextId++, ...line })
 
-  // Terminal bell: counts rings, so the window can flash the screen or report it
-  // (watch it). Rung by BEL (\a) in output, by commands (ctx.bell), and by
-  // the line editor where zsh beeps: no completion, an ambiguous one, history ends.
-  const bellCount = ref(0)
-  const bell = () => {
-    bellCount.value++
-  }
-
   const print = (text = '') => {
+    // BEL (\a) is a control character, not something to draw
     text = String(text)
-    if (text.includes('\x07')) {
-      bell()
-      text = text.replaceAll('\x07', '')
-      // a bare bell prints nothing
-      if (!text) return
-    }
-    for (const row of String(text).split('\n')) push({ text: row })
+    if (text === '\x07') return
+    for (const row of text.replaceAll('\x07', '').split('\n')) push({ text: row })
   }
 
   // Styled output: each line is an array of { text, bold?, underline? }
@@ -215,10 +203,7 @@ export function useTerminal(options = {}) {
     const matches = candidates
       .filter((c) => c.value.startsWith(word) && !seen.has(c.value) && seen.add(c.value))
       .sort((a, b) => (a.value < b.value ? -1 : a.value > b.value ? 1 : 0))
-    if (!matches.length) {
-      bell()
-      return null
-    }
+    if (!matches.length) return null
 
     const replace = (text) => {
       setLine(line.slice(0, start) + text + line.slice(caret))
@@ -229,8 +214,6 @@ export function useTerminal(options = {}) {
     if (prefix.length > word.length) return replace(insertion({ value: prefix }, quote, false))
 
     completions.value = matches.map((m) => m.display)
-    // zsh's LIST_BEEP
-    bell()
     cycle = { base: line, start, end: caret, quote, matches, index: -1, line, caret }
     return null
   }
@@ -302,7 +285,6 @@ export function useTerminal(options = {}) {
         resolve: (path) => resolvePath(path, cwd.value, home),
         chdir: (path) => signal.aborted || chdir(path),
         print: guardedPrint,
-        bell: () => signal.aborted || bell(),
         printStyled: guardedPrintStyled,
         page: guardedPage,
         clear,
@@ -364,20 +346,14 @@ export function useTerminal(options = {}) {
   }
 
   const historyPrev = () => {
-    if (!history.length || historyIndex === 0) {
-      bell()
-      return false
-    }
+    if (!history.length || historyIndex === 0) return false
     if (historyIndex === history.length) draft = input.value
     input.value = history[--historyIndex]
     return true
   }
 
   const historyNext = () => {
-    if (historyIndex >= history.length) {
-      bell()
-      return false
-    }
+    if (historyIndex >= history.length) return false
     historyIndex++
     input.value = historyIndex === history.length ? draft : history[historyIndex]
     return true
@@ -404,8 +380,6 @@ export function useTerminal(options = {}) {
     interrupt,
     complete,
     completions,
-    bell,
-    bellCount,
     historyPrev,
     historyNext,
   }

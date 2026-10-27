@@ -15,8 +15,7 @@
  * @property {Record<string, Command>} commands  Registry of all commands
  * @property {(path: string) => string} resolve  Absolute path for a user-supplied one
  * @property {(path: string) => void}   chdir    Change the working directory
- * @property {(text?: string) => void}  print    Append plain output (may contain \n; \a rings the bell)
- * @property {() => void}               bell     Ring the terminal bell
+ * @property {(text?: string) => void}  print    Append plain output (may contain \n)
  * @property {(lines: Segment[][]) => void} printStyled  Append styled lines
  * @property {(lines: Segment[][], opts?: { title?: string }) => Promise<void>} page
  *           Show lines in the less-like pager; resolves when the user quits (q)

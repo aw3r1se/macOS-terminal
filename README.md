@@ -1,9 +1,16 @@
-# macos-terminal
+# macOS-terminal
 
 A macOS Terminal.app look-alike for Vue 3: window chrome (traffic lights,
 drag/resize snapped to the character grid, full screen, genie minimize), a zsh-like
 prompt with history and Ctrl+C, a less-like pager — and **your own commands**.
 The package ships no commands: you write them.
+
+**[Live demo](https://aw3r1se.github.io/macOS-terminal/)** — its commands are in
+[`demo/commands`](demo/commands), a good starting point for your own.
+
+Pairs with [`@aw3r1se/macos-dock`](https://github.com/aw3r1se/macOS-dock) — the
+window minimizes into a Dock tile with the genie effect (see
+[With the Dock](#-with-the-dock)).
 
 ## 🔧 Installation
 
@@ -115,8 +122,7 @@ completed), `word` (up to the caret, unquoted), `cwd`, `home`, `user`, `env`,
 | `commands` | registry of all commands, by name |
 | `resolve(path)` | absolute path for a user-supplied one (`~`, `..`, relative) |
 | `chdir(path)` | change the working directory |
-| `print(text)` | append plain output (may contain `\n`; `\a` rings the bell) |
-| `bell()` | ring the terminal bell |
+| `print(text)` | append plain output (may contain `\n`) |
 | `printStyled(lines)` | append styled lines: `[[{ text, bold?, underline?, inverse? }, …], …]` |
 | `page(lines, { title })` | show lines in the pager; resolves when the user quits (`q`) |
 | `clear()`, `clearScrollback()` | clear the screen (scrollback kept) / everything (Cmd+K) |
@@ -150,12 +156,11 @@ thrown error prints `<name>: <message>` and exits with 1.
 | `lastLogin` | `boolean` | `true` | Print "Last login: …" on start |
 | `cols`, `rows` | `number` | `80`, `24` | Initial size in character cells (clamped to the viewport) |
 | `margin` | `number` | `10` | Space kept to the viewport edges, px |
-| `visualBell` | `boolean` | `false` | Flash the screen on the bell |
 
-Events: `close`, `minimize` (traffic lights), `bell` (e.g. to bounce a Dock icon while the window is in the background). Exposed via a template ref: `title`,
+Events: `close`, `minimize` (traffic lights). Exposed via a template ref: `title`,
 `session`, `focus()`, `isFocused`, and for minimizing into a Dock tile
 `minimizeTo(rect)` → snapshot and `restoreFrom(rect, snapshot)` — they play the genie
-animation; see [`@aw3r1se/macos-dock`](https://github.com/aw3r1se/macOS-dock).
+animation; see [With the Dock](#-with-the-dock).
 
 ### Without the window
 
@@ -182,6 +187,71 @@ getters) plus `getCols`.
 `style.css` defines the look as CSS variables on `:root` (`--term-bg`, `--term-fg`,
 `--term-font-size`, `--window-radius`, `--titlebar-bg`, …) — override them to theme it.
 `<html data-font="classic">` switches to the Menlo font stack.
+
+## 🧩 With the Dock
+
+[`@aw3r1se/macos-dock`](https://github.com/aw3r1se/macOS-dock) is a macOS-like Dock
+made to go with this window: the yellow button minimizes the window into its own
+Dock tile with the genie effect, the tile shows a snapshot of the window, and a
+click on the tile or the app icon brings the window back out.
+
+```sh
+npm i @aw3r1se/macos-terminal @aw3r1se/macos-dock
+```
+
+```vue
+<script setup>
+  import { ref, computed, nextTick } from 'vue';
+  import { TerminalWindow } from '@aw3r1se/macos-terminal';
+  import { AppDock } from '@aw3r1se/macos-dock';
+  import TerminalIcon from './TerminalIcon.vue';
+  import hello from './commands/hello';
+
+  const terminal = ref();
+  const dock = ref();
+  const minimized = ref(false);
+  const thumb = ref(null); // the window's snapshot, shown in its tile
+
+  const apps = [{ id: 'terminal', label: 'Terminal', icon: TerminalIcon, running: true }];
+  const windows = computed(() => (minimized.value ? [{ id: 'win', app: 'terminal', thumb: thumb.value }] : []));
+
+  // where the window lands in its tile, in viewport coordinates
+  const tileRect = () => {
+    const el = terminal.value.$el;
+    return dock.value.thumbRect('win', el.offsetWidth, el.offsetHeight);
+  };
+
+  async function minimize() {
+    minimized.value = true; // the tile must exist before measuring it
+    await nextTick();
+    thumb.value = await terminal.value.minimizeTo(tileRect());
+  }
+
+  async function restore() {
+    const shot = thumb.value;
+    thumb.value = null;
+    await terminal.value.restoreFrom(tileRect(), shot);
+    minimized.value = false;
+  }
+</script>
+
+<template>
+  <div style="position: fixed; inset: 10px">
+    <TerminalWindow ref="terminal" :commands="[hello]" @minimize="minimize" />
+  </div>
+  <AppDock
+    ref="dock"
+    :apps="apps"
+    :windows="windows"
+    :pinned="minimized"
+    @activate="minimized && restore()"
+    @restore="restore"
+  />
+</template>
+```
+
+The Dock also gives the app icon a right-click menu (windows, Hide, Quit…) — see
+its README.
 
 ## ⌨️ Keys
 
@@ -210,15 +280,13 @@ Copy/paste follow the platform:
 
 Modifier keys alone never drop the selection; typing does, and goes to the prompt.
 
-## 🔔 Bell
+## 🧪 Demo
 
-The bell rings, as in zsh, on `\a` in output or `ctx.bell()`, on Tab with no
-completion or an ambiguous one, and at either end of the history.
-
-It makes no sound: `visual-bell` flashes the screen (Terminal.app's "Flash
-screen"), and the window emits `bell` — play a sound there if you want one.
-
-Without the window, watch `session.bellCount` and pass `:visual-bell` to `<TerminalScreen>`.
+```sh
+npm install
+npm run dev          # the demo, on the package's current source
+npm run build:demo   # → demo/dist, published to GitHub Pages on every push to master
+```
 
 ## 📄 License
 

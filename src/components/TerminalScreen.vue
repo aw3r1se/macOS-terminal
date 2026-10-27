@@ -22,8 +22,6 @@ const props = defineProps({
   // Session from useTerminal()
   session: { type: Object, required: true },
   focused: { type: Boolean, default: true },
-  // Flash the screen on the bell (Terminal.app's "Flash screen")
-  visualBell: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['resize'])
@@ -34,13 +32,7 @@ const inputEl = ref()
 const measureEl = ref()
 const pagerEl = ref()
 
-const { lines, input, prompt, busy, pager, screenStart, completions, bellCount } = props.session
-
-// Visual bell: a flash over the screen, restarted by each ring
-const flash = ref(0)
-watch(bellCount, () => {
-  if (props.visualBell) flash.value++
-})
+const { lines, input, prompt, busy, pager, screenStart, completions } = props.session
 
 // Scrollback vs. the current screen (everything since the last `clear`)
 const scrollback = computed(() => lines.value.slice(0, screenStart.value))
@@ -500,8 +492,6 @@ defineExpose({ focus, blur, metrics })
       @quit="pager.close()"
     />
 
-    <div v-if="flash" :key="flash" class="bell-flash" aria-hidden="true" @animationend="flash = 0" />
-
     <ContextMenu v-if="menu" :items="menuItems" :x="menu.x" :y="menu.y" @close="menu = null" />
   </div>
 </template>
@@ -521,20 +511,6 @@ defineExpose({ focus, blur, metrics })
 
 .terminal ::selection {
   background: var(--term-selection);
-}
-
-.bell-flash {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: #fff;
-  pointer-events: none;
-  animation: bell-flash 160ms ease-out both;
-}
-
-@keyframes bell-flash {
-  from { opacity: 0.35; }
-  to { opacity: 0; }
 }
 
 .screen {
