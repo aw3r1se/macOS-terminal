@@ -31,7 +31,7 @@
     "vue": "^3.3.0"
   },
   "devDependencies": {
-    "@aw3r1se/macos-dock": "^0.1.1",
+    "@aw3r1se/macos-dock": "^0.2.0",
     "@vitejs/plugin-vue": "^6.0.10",
     "vite": "^8.3.5",
     "vue": "^3.5.44"

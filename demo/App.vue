@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
 import { TerminalWindow } from '../src'
 import { AppDock } from '@aw3r1se/macos-dock'
 import TerminalIcon from './TerminalIcon.vue'
@@ -24,14 +24,14 @@ const thumb = ref(null)
 const isOpen = computed(() => status.value !== 'closed')
 const hasTile = computed(() => ['minimizing', 'minimized', 'restoring'].includes(status.value))
 
-// Show/hide the Dock when the pointer reaches the bottom edge
-const autohide = ref(true)
-// A Dock that stays shown takes its space from zoomed windows, as on macOS
+// The Dock stays shown; true hides it until the pointer reaches the bottom edge
+const DOCK_AUTOHIDE = false
+// A shown Dock takes its space from zoomed windows, as on macOS
 const dockInset = ref(0)
-watch(autohide, async (hiding) => {
-  await nextTick()
+onMounted(() => {
+  if (DOCK_AUTOHIDE) return
   const el = document.querySelector('.dock')
-  dockInset.value = hiding || !el ? 0 : el.offsetHeight + parseFloat(getComputedStyle(el).bottom)
+  dockInset.value = el.offsetHeight + parseFloat(getComputedStyle(el).bottom)
 })
 
 const WINDOW_ID = 'terminal-window'
@@ -124,14 +124,14 @@ function activate() {
 
     <aside class="about">
       <a :href="REPO" target="_blank" rel="noopener">@aw3r1se/macos-terminal</a>
-      <span>type <b>help</b> · Tab completes · right-click for the menu · Dock at the bottom edge</span>
+      <span>type <b>help</b> · Tab completes · right-click for the menu</span>
     </aside>
 
     <AppDock
       ref="dock"
       :apps="apps"
       :windows="windows"
-      v-model:autohide="autohide"
+      :autohide="DOCK_AUTOHIDE"
       :pinned="status !== 'open' || hidden"
       @activate="activate"
       @restore="restore"
