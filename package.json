@@ -1,0 +1,44 @@
+{
+  "name": "@aw3r1se/macos-terminal",
+  "version": "0.1.0",
+  "description": "macOS Terminal look-alike vue-component with pluggable commands",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./style.css": "./src/style.css"
+  },
+  "files": ["src"],
+  "sideEffects": ["*.vue", "*.css"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aw3r1se/macos-terminal.git"
+  },
+  "dependencies": {
+    "@aw3r1se/vue-dragresize": "^1.1.0",
+    "@aw3r1se/vue-focus": "^1.0.0",
+    "@fontsource/geist-mono": "^5.3.0",
+    "macos-cursors": "^1.1.0",
+    "macos-traffic-lights": "^2.0.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "macos",
+    "terminal",
+    "shell",
+    "cli"
+  ],
+  "author": {
+    "name": "Bogdan Koch",
+    "email": "aw3r1se@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aw3r1se/macos-terminal/issues"
+  }
+}

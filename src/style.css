@@ -1,0 +1,143 @@
+@import '@fontsource/geist-mono/400.css';
+@import '@fontsource/geist-mono/700.css';
+
+/* Menlo with its baseline moved 0.5px down, onto Terminal.app's (SF Mono) baseline
+   in the 14px line. Only the metrics change; the glyphs are the system Menlo. */
+@font-face {
+  font-family: 'Menlo Terminal';
+  src: local('Menlo-Regular'), local('Menlo Regular');
+  ascent-override: 97.35%;
+  descent-override: 19%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Menlo Terminal';
+  font-weight: 700;
+  src: local('Menlo-Bold'), local('Menlo Bold');
+  ascent-override: 97.35%;
+  descent-override: 19%;
+  line-gap-override: 0%;
+}
+
+:root {
+  --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', sans-serif;
+  /* Terminal font presets, switched with <html data-font="…">:
+     - sf (default): the real SF Mono where the browser can reach it (ui-monospace in
+       Safari, or an installed 'SF Mono'), otherwise Geist Mono — the closest open
+       font to Terminal.app's rendering of the 20 measured;
+     - classic: the original stack, which ends up as Menlo outside Safari
+       (moved onto Terminal.app's baseline, see 'Menlo Terminal' above). */
+  --font-mono-sf: ui-monospace, 'SF Mono', SFMono-Regular, 'Geist Mono', monospace;
+  --font-mono-classic: ui-monospace, 'SF Mono', SFMono-Regular, 'Menlo Terminal', Menlo, Monaco, 'JetBrains Mono', Consolas, monospace;
+  --font-mono: var(--font-mono-sf);
+
+  /* Basic profile (dark), measured from Terminal.app screenshots in sRGB */
+  --term-bg: #1e1e1e;
+  --term-fg: #ffffff;
+  --term-cursor: #9d9d9d;
+  --term-selection: #3f638b;
+  --term-selection-unfocused: #777777;
+  /* Basic profile default: SF Mono Regular 11pt on a 7 × 14pt cell (80×24 = 580×385
+     with the title bar). The advance is forced so any fallback font keeps the grid. */
+  --term-font-size: 11px;
+  --term-line-height: 14px;
+  --term-cell-width: 7px;
+  --term-padding: 7px 10px 10px 10px;
+
+  /* macOS 26 window corner: a superellipse, fitted against the real window outline.
+     Browsers without corner-shape get the closest plain arc instead. */
+  --window-radius: 17px;
+  --window-corner-shape: round;
+  --window-outline: 0 0 0 0.5px rgba(0, 0, 0, 0.93);
+  --window-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+  --window-outline-unfocused: 0 0 0 0.5px rgba(0, 0, 0, 0.83);
+  --window-shadow-unfocused: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --window-border: rgba(255, 255, 255, 0.2);
+  --window-border-top: rgba(255, 255, 255, 0.28);
+  --window-highlight-top: rgba(255, 255, 255, 0.11);
+
+  --titlebar-height: 32px;
+  --titlebar-bg: #232427;
+  --titlebar-bg-unfocused: #222427;
+  --titlebar-fg: #9fa0a3;
+  --titlebar-fg-unfocused: #6e7071;
+}
+
+:root[data-font='classic'] {
+  --font-mono: var(--font-mono-classic);
+}
+
+@supports (corner-shape: superellipse(2)) {
+  :root {
+    --window-radius: 26px;
+    --window-corner-shape: superellipse(1.8);
+  }
+}
+
+/* The window and screen size things as border-box (the grid math relies on it) */
+.terminal-window,
+.terminal-window *,
+.terminal-window *::before,
+.terminal-window *::after,
+.terminal,
+.terminal *,
+.terminal *::before,
+.terminal *::after {
+  box-sizing: border-box;
+}
+
+.terminal-window,
+.terminal {
+  color-scheme: dark;
+}
+
+.terminal-window {
+  font-family: var(--font-ui);
+}
+
+/* macOS I-beam over the screen */
+.terminal {
+  cursor: url('macos-cursors/cursors/text.cur'), text;
+}
+
+/* Resize handles (@aw3r1se/vue-dragresize) sit mostly outside the window, as on
+   macOS, so they don't cover the overlay scrollbar or the content edge. */
+.terminal-window .vdr-handle.vdr-top { top: -5px; height: 6px; }
+.terminal-window .vdr-handle.vdr-bottom { bottom: -5px; height: 6px; }
+.terminal-window .vdr-handle.vdr-left { left: -5px; width: 6px; }
+.terminal-window .vdr-handle.vdr-right { right: -5px; width: 6px; }
+
+.terminal-window .vdr-handle.vdr-top-left,
+.terminal-window .vdr-handle.vdr-top-right,
+.terminal-window .vdr-handle.vdr-bottom-left,
+.terminal-window .vdr-handle.vdr-bottom-right {
+  width: 12px;
+  height: 12px;
+}
+
+.terminal-window .vdr-handle.vdr-top-left { top: -5px; left: -5px; }
+.terminal-window .vdr-handle.vdr-top-right { top: -5px; right: -5px; }
+.terminal-window .vdr-handle.vdr-bottom-left { bottom: -5px; left: -5px; }
+.terminal-window .vdr-handle.vdr-bottom-right { bottom: -5px; right: -5px; }
+
+/* macOS cursors for the resize handles */
+.terminal-window .vdr-handle.vdr-top,
+.terminal-window .vdr-handle.vdr-bottom {
+  cursor: url('macos-cursors/cursors/ns_resize.cur'), ns-resize;
+}
+
+.terminal-window .vdr-handle.vdr-left,
+.terminal-window .vdr-handle.vdr-right {
+  cursor: url('macos-cursors/cursors/ew_resize.cur'), ew-resize;
+}
+
+.terminal-window .vdr-handle.vdr-top-left,
+.terminal-window .vdr-handle.vdr-bottom-right {
+  cursor: url('macos-cursors/cursors/nw_resize.cur'), nwse-resize;
+}
+
+.terminal-window .vdr-handle.vdr-top-right,
+.terminal-window .vdr-handle.vdr-bottom-left {
+  cursor: url('macos-cursors/cursors/ne_resize.cur'), nesw-resize;
+}
