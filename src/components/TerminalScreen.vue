@@ -330,6 +330,11 @@ function onScreenKeydown(e) {
   }
   // other Cmd shortcuts stay with the browser; Cmd+V pastes into the input
   if (e.metaKey && key !== 'v' && key !== 'k') return
+  // Ctrl+C interrupts and leaves the selection alone, as in Terminal.app
+  if (e.ctrlKey && !e.altKey && !e.shiftKey && key === 'c') {
+    e.preventDefault()
+    return props.session.interrupt()
+  }
   focus()
   onKeydown(e)
 }

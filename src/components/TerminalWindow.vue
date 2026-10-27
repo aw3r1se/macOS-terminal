@@ -18,13 +18,17 @@ const props = defineProps({
   tty: { type: String, default: 'ttys000' },
   // Print "Last login: …" on start, as Terminal.app does
   lastLogin: { type: Boolean, default: true },
-  // Initial window size in character cells (Terminal.app's default profile: 80×24);
-  // the user resizes it from there. Clamped to the viewport.
+  // Window size in character cells (Terminal.app's default profile: 80×24),
+  // clamped to the viewport. The user resizes it from there; changing these
+  // resizes it again.
   cols: { type: Number, default: 80 },
   rows: { type: Number, default: 24 },
   // Space kept between the window and the viewport edges, px. Inset the
   // window's container by the same amount, so "zoom" fills it exactly.
   margin: { type: Number, default: 10 },
+  // Space zoom leaves clear inside the margin, { top, right, bottom, left } px —
+  // e.g. { bottom } for a Dock that doesn't auto-hide. A zoomed window follows it.
+  insets: { type: Object, default: () => ({}) },
 })
 
 
@@ -37,6 +41,7 @@ const FULLSCREEN_MS = 400
 const { geom, flags, style, beginDrag, beginResize, toggleMaximize } = useDragResize({
   minSize: 240,
   marginPx: MARGIN,
+  insets: () => props.insets,
   // snapping to the character grid is done below, per axis
   stepPx: 1,
 })
@@ -196,20 +201,33 @@ onMounted(() => {
   document.addEventListener('fullscreenchange', onFullscreenChange)
   window.addEventListener('mousemove', onPointerMove)
   // useDragResize starts maximized — open as a regular centered cols×rows window instead.
+  sizeTo(props.cols, props.rows, { center: true })
+  focus()
+})
+
+// Size the window to a cols×rows grid, within the viewport. The top-left
+// corner stays put, unless centering (on open).
+function sizeTo(cols, rows, { center = false } = {}) {
   const maxW = window.innerWidth - MARGIN * 2
   const maxH = window.innerHeight - MARGIN * 2
   const { cellW, cellH, padX, padY } = screen.value.metrics()
-  const w = Math.min(Math.ceil(props.cols * cellW + padX), maxW)
-  const h = Math.min(Math.ceil(props.rows * cellH + padY + titlebarEl.value.offsetHeight), maxH)
+  const w = Math.min(Math.ceil(cols * cellW + padX), maxW)
+  const h = Math.min(Math.ceil(rows * cellH + padY + titlebarEl.value.offsetHeight), maxH)
   flags.isMax = false
   Object.assign(geom, {
     w,
     h,
-    x: Math.floor((maxW - w) / 2),
-    y: Math.floor((maxH - h) / 3),
+    x: center ? Math.floor((maxW - w) / 2) : Math.min(geom.x, maxW - w),
+    y: center ? Math.floor((maxH - h) / 3) : Math.min(geom.y, maxH - h),
   })
-  focus()
-})
+}
+
+// Changing cols/rows resizes the window, as editing Terminal's profile does
+// (not in full screen, which keeps the screen's size)
+watch(
+  () => [props.cols, props.rows],
+  ([cols, rows]) => fullscreen.value || sizeTo(cols, rows),
+)
 
 onBeforeUnmount(() => {
   clearTimeout(animTimer)

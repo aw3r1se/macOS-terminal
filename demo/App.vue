@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { TerminalWindow } from '../src'
 import { AppDock } from '@aw3r1se/macos-dock'
 import TerminalIcon from './TerminalIcon.vue'
@@ -11,8 +11,11 @@ const context = { fs }
 
 const REPO = 'https://github.com/aw3r1se/macOS-terminal'
 
-// 'open' | 'hidden' | 'minimizing' | 'minimized' | 'restoring' | 'closed'
+// The window: 'open' | 'minimizing' | 'minimized' | 'restoring' | 'closed'
 const status = ref('open')
+// The app is hidden (Hide in its Dock menu): its window isn't shown, but stays
+// as it was — open, or minimized in its Dock tile — as on macOS
+const hidden = ref(false)
 const terminal = ref()
 const dock = ref()
 // Snapshot of the minimized window (its Dock tile and the genie copies)
@@ -23,6 +26,13 @@ const hasTile = computed(() => ['minimizing', 'minimized', 'restoring'].includes
 
 // Show/hide the Dock when the pointer reaches the bottom edge
 const autohide = ref(true)
+// A Dock that stays shown takes its space from zoomed windows, as on macOS
+const dockInset = ref(0)
+watch(autohide, async (hiding) => {
+  await nextTick()
+  const el = document.querySelector('.dock')
+  dockInset.value = hiding || !el ? 0 : el.offsetHeight + parseFloat(getComputedStyle(el).bottom)
+})
 
 const WINDOW_ID = 'terminal-window'
 const WINDOW_MARKS = { open: 'check', minimized: 'diamond' }
@@ -32,9 +42,9 @@ const WINDOW_MARKS = { open: 'check', minimized: 'diamond' }
 const appMenu = computed(() => {
   if (!isOpen.value) return [{ label: 'Open', action: activate }]
   return [
-    { label: terminal.value?.title ?? 'Terminal', mark: WINDOW_MARKS[status.value], action: activate },
+    { label: terminal.value?.title ?? 'Terminal', mark: hidden.value ? undefined : WINDOW_MARKS[status.value], action: activate },
     { separator: true },
-    status.value === 'hidden' ? { label: 'Show', action: activate } : { label: 'Hide', action: hide },
+    hidden.value ? { label: 'Show', action: show } : { label: 'Hide', action: hide },
     { label: 'Quit', action: quit, alt: { label: 'Force Quit' } },
   ]
 })
@@ -61,6 +71,8 @@ async function minimize() {
 
 async function restore() {
   if (status.value !== 'minimized') return
+  // un-minimizing a window shows a hidden app
+  hidden.value = false
   const el = terminal.value.$el
   const source = dock.value.thumbRect(WINDOW_ID, el.offsetWidth, el.offsetHeight)
   const shot = thumb.value
@@ -70,19 +82,24 @@ async function restore() {
   if (status.value === 'restoring') status.value = 'open'
 }
 
-function hide() {
-  if (status.value === 'open') status.value = 'hidden'
+const hide = () => (hidden.value = true)
+
+// Show unhides the app; a minimized window stays in the Dock
+function show() {
+  hidden.value = false
+  if (status.value === 'open') nextTick(() => terminal.value?.focus())
 }
 
 function quit() {
   thumb.value = null
+  hidden.value = false
   status.value = 'closed'
 }
 
-// Clicking the app icon brings a minimized or hidden window back, like macOS
+// Clicking the app icon unhides the app and brings its window back, like macOS
 function activate() {
+  hidden.value = false
   if (status.value === 'minimized') return restore()
-  if (status.value === 'hidden') status.value = 'open'
   if (status.value === 'open') return nextTick(() => terminal.value?.focus())
   if (status.value === 'closed') status.value = 'open'
 }
@@ -94,10 +111,11 @@ function activate() {
       <Transition name="window">
         <TerminalWindow
           v-if="isOpen"
-          v-show="status !== 'hidden'"
+          v-show="!hidden"
           ref="terminal"
           :commands="commands"
           :context="context"
+          :insets="{ bottom: dockInset }"
           @close="status = 'closed'"
           @minimize="minimize"
         />
@@ -114,7 +132,7 @@ function activate() {
       :apps="apps"
       :windows="windows"
       v-model:autohide="autohide"
-      :pinned="status !== 'open'"
+      :pinned="status !== 'open' || hidden"
       @activate="activate"
       @restore="restore"
     />

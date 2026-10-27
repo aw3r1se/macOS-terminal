@@ -154,8 +154,9 @@ thrown error prints `<name>: <message>` and exits with 1.
 | `home` | `string` | `/Users/<user>` | |
 | `tty` | `string` | `'ttys000'` | |
 | `lastLogin` | `boolean` | `true` | Print "Last login: …" on start |
-| `cols`, `rows` | `number` | `80`, `24` | Initial size in character cells (clamped to the viewport) |
+| `cols`, `rows` | `number` | `80`, `24` | Size in character cells (clamped to the viewport); changing them resizes the window |
 | `margin` | `number` | `10` | Space kept to the viewport edges, px |
+| `insets` | `object` | `{}` | Space zoom leaves clear, `{ top, right, bottom, left }` px — e.g. `{ bottom }` for a Dock that doesn't auto-hide |
 
 Events: `close`, `minimize` (traffic lights). Exposed via a template ref: `title`,
 `session`, `focus()`, `isFocused`, and for minimizing into a Dock tile
